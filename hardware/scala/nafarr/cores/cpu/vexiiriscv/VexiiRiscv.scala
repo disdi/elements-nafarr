@@ -122,6 +122,7 @@ object VexiiRiscvCoreParameter {
       btbSets: Int = 16,
       pmpRegions: Int = 8,
       withCompressed: Boolean = true,
+      withCacheOps: Boolean = false,
       mainRegions: Seq[SizeMapping] = Seq(SizeMapping(0x80000000L, 0x30000000L)),
       ioRegions: Seq[SizeMapping] = Seq(SizeMapping(0xf0000000L, 0x10000000L))
   ): VexiiRiscvCoreParameter = {
@@ -134,6 +135,8 @@ object VexiiRiscvCoreParameter {
     param.addISA("m")
     if (withCompressed) param.addISA("c")
     param.addISA("zicntr", "zihpm")
+    // Zicbom (cbo.clean/flush/inval on the L1): software-managed coherency for DMA buffers.
+    if (withCacheOps) param.addISA("zicbom")
     param.additionalPerformanceCounters = 4
 
     require(iCacheSize % lineSize == 0, s"iCacheSize must be a multiple of $lineSize")
