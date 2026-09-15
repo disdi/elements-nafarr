@@ -8,6 +8,7 @@ import spinal.core._
 import spinal.lib._
 import spinal.lib.bus.misc.BusSlaveFactory
 import nafarr.IpIdentification
+import nafarr.system.dma.DmaRequest
 
 import nafarr.blackboxes.ihp.sg13g2._
 
@@ -197,5 +198,10 @@ object AesMaskedAcceleratorCtrl {
     busCtrl.read(fifoOccupancy, address = regs.control, bitOffset = 24)
 
     ctrl.masking << busCtrl.createAndDriveFlow(Bits(28 bits), address = regs.masking).toStream
+
+    // tx tracks the plaintext FIFO; the key is loaded once and not DMA-fed.
+    val dmaRequest = DmaRequest()
+    dmaRequest.tx := ctrl.plaintext.ready
+    dmaRequest.rx := stream.valid
   }
 }

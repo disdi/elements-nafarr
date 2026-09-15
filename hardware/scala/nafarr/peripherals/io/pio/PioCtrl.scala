@@ -11,6 +11,7 @@ import spinal.lib.bus.misc.BusSlaveFactory
 import spinal.lib.misc.InterruptCtrl
 import spinal.lib.io.{TriStateArray, TriState}
 import nafarr.IpIdentification
+import nafarr.system.dma.DmaRequest
 import nafarr.library.ClockDivider
 
 object PioCtrl {
@@ -447,6 +448,11 @@ object PioCtrl {
       )
       busCtrl.read(fifoOccupancy, address = regs.fifoStatus, bitOffset = 24)
     }
+
+    // Commands live in program memory, not a FIFO: only the read FIFO can request.
+    val dmaRequest = DmaRequest()
+    dmaRequest.tx := False
+    dmaRequest.rx := rx.stream.valid
 
     val clockDivider = Reg(UInt(p.clockDividerWidth bits))
     if (p.init != null && p.init.clockDivider != 0)

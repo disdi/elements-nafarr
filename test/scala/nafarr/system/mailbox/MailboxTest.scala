@@ -100,10 +100,14 @@ class MailboxTest extends AnyFunSuite {
 
       SimTest.readField(driver, regs.status, 0, 0, 0, "Channel 0 not empty after push")
       SimTest.readField(driver, regs.occupancy(0), 31, 0, 1, "Channel 0 occupancy is 1")
+      assert(dut.io.dmaRequest(0).rx.toBoolean, "DMA rx request low with data in channel 0")
+      assert(dut.io.dmaRequest(0).tx.toBoolean, "DMA tx request low with space in channel 0")
+      assert(!dut.io.dmaRequest(1).rx.toBoolean, "DMA rx request high on empty channel 1")
       SimTest.read(driver, regs.read(0), 0xdeadbeefL, "Channel 0 pop value")
       dut.clockDomain.waitSampling(2)
 
       SimTest.readField(driver, regs.status, 0, 0, 1, "Channel 0 empty after pop")
+      assert(!dut.io.dmaRequest(0).rx.toBoolean, "DMA rx request high after pop")
     }
   }
 
@@ -132,6 +136,7 @@ class MailboxTest extends AnyFunSuite {
       dut.clockDomain.waitSampling(2)
 
       SimTest.readField(driver, regs.status, 2, 2, 1, "Channel 0 full")
+      assert(!dut.io.dmaRequest(0).tx.toBoolean, "DMA tx request high on full channel 0")
 
       for (i <- 0 until dut.p.depth) {
         SimTest.read(driver, regs.read(0), i, s"Channel 0 drain value $i")

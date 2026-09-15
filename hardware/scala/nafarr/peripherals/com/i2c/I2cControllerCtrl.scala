@@ -9,6 +9,7 @@ import spinal.lib._
 import spinal.lib.bus.misc.BusSlaveFactory
 import spinal.lib.misc.InterruptCtrl
 import nafarr.IpIdentification
+import nafarr.system.dma.DmaRequest
 import nafarr.library.ClockDivider
 
 object I2cControllerCtrl {
@@ -339,6 +340,10 @@ object I2cControllerCtrl {
       )
       busCtrl.read(fifoOccupancy, address = regOffset + 0x04, 0)
     }
+
+    val dmaRequest = DmaRequest()
+    dmaRequest.tx := cmdLogic.streamUnbuffered.ready
+    dmaRequest.rx := rspLogic.stream.valid
 
     val config = new Area {
       val cfg = Reg(ctrl.config)

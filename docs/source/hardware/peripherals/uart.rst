@@ -79,6 +79,13 @@ Data Flow and Processing
 3. Valid data is pushed into the receive FIFO.
 4. A receive interrupt is triggered to notify the system that data is available for reading.
 
+**DMA Requests:**
+
+The ``dmaRequest`` output exposes both FIFOs to a DMA controller as level-sensitive request
+lines: ``tx`` is high while the transmit FIFO can accept a word, ``rx`` is high while the
+receive FIFO holds a word. Both directions target the ``readWrite`` register with 8/16-bit
+element width. See :ref:`hardware-system-dma`.
+
 Considerations
 **************
 

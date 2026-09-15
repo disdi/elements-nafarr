@@ -15,6 +15,8 @@ import spinal.lib.bus.tilelink.{
 }
 import spinal.lib.bus.wishbone._
 
+import nafarr.system.dma.DmaRequest
+
 object Mailbox {
 
   class Core[T <: spinal.core.Data with IMasterSlave](
@@ -25,11 +27,16 @@ object Mailbox {
     val io = new Bundle {
       val bus = slave(busType())
       val interrupt = out(Bool())
+      val dmaRequest = out(Vec(DmaRequest(), p.channelCount))
     }
     val busCtrl = factory(io.bus)
     val ctrl = MailboxCtrl(p)
     val mapper = MailboxCtrl.Mapper(busCtrl, ctrl, p)
     io.interrupt := ctrl.io.interrupt
+    for (ch <- 0 until p.channelCount) {
+      io.dmaRequest(ch).tx := ctrl.io.push(ch).ready
+      io.dmaRequest(ch).rx := ctrl.io.pop(ch).valid
+    }
   }
 }
 

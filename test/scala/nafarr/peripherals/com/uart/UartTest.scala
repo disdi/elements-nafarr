@@ -163,6 +163,10 @@ class UartTest extends AnyFunSuite {
       /* Read FIFO status */
       SimTest.readField(apb, regs.fifoStatus, 31, 24, 0, "UART RX occupancy")
       SimTest.readField(apb, regs.fifoStatus, 23, 16, 16, "UART TX vacany")
+
+      /* DMA request lines: empty TX FIFO accepts, empty RX FIFO has nothing */
+      assert(dut.io.dmaRequest.tx.toBoolean, "DMA tx request low with empty TX FIFO")
+      assert(!dut.io.dmaRequest.rx.toBoolean, "DMA rx request high with empty RX FIFO")
     }
 
     compiled.doSim("testIO") { dut =>
@@ -264,7 +268,11 @@ class UartTest extends AnyFunSuite {
 
       val receive = UartEncoder(dut.io.uart.rxd, 8640, BigInt("47", 16))
       receive.join()
+      dut.clockDomain.waitSampling(2)
+      assert(dut.io.dmaRequest.rx.toBoolean, "DMA rx request low with data in RX FIFO")
       SimTest.read(apb, regs.readWrite, BigInt("00010047", 16), "Didn't received 0x47/'G'")
+      dut.clockDomain.waitSampling(2)
+      assert(!dut.io.dmaRequest.rx.toBoolean, "DMA rx request high after RX FIFO drained")
       SimTest.read(apb, regs.interruptPending, BigInt("00000002", 16), "RX interrupt isn't pending")
       SimTest.checkPins(dut.io.interrupt.toBigInt, 1, f"Interrupt isn't pending")
       apb.write(regs.interruptEnable, BigInt("00000000", 16))

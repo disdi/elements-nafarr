@@ -114,5 +114,12 @@ class SpiControllerTest extends AnyFunSuite {
       }
       area.dut
     }
+
+    compiled.doSim("dmaRequest") { dut =>
+      dut.clockDomain.forkStimulus(10)
+      dut.clockDomain.waitSampling(2)
+      assert(dut.io.dmaRequest.tx.toBoolean, "DMA tx request low with empty command FIFO")
+      assert(!dut.io.dmaRequest.rx.toBoolean, "DMA rx request high with empty response FIFO")
+    }
   }
 }

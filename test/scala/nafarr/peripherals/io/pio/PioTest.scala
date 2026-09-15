@@ -193,6 +193,10 @@ class PioTest extends AnyFunSuite {
       /* Read FIFO status */
       SimTest.readField(apb, regs.fifoStatus, 7, 0, 0, "FIFO Status - Exec pointer")
       SimTest.readField(apb, regs.fifoStatus, 15, 8, 0, "FIFO Status - Write pointer")
+
+      /* DMA request lines: no tx line (program memory), empty read FIFO */
+      assert(!dut.io.dmaRequest.tx.toBoolean, "DMA tx request must stay low")
+      assert(!dut.io.dmaRequest.rx.toBoolean, "DMA rx request high with empty read FIFO")
     }
 
     compiled.doSim("read value") { dut =>
@@ -204,8 +208,11 @@ class PioTest extends AnyFunSuite {
         generateCmd(1, PioCtrl.CommandType.READ)
       ))
       dut.clockDomain.waitSampling(15)
+      assert(dut.io.dmaRequest.rx.toBoolean, "DMA rx request low with data in read FIFO")
       SimTest.read(apb, regs.readWrite, BigInt("00010000", 16), "Unable to read value 0 from Pio pin 0")
       SimTest.read(apb, regs.readWrite, BigInt("00010000", 16), "Unable to read value 0 from Pio pin 1")
+      dut.clockDomain.waitSampling(2)
+      assert(!dut.io.dmaRequest.rx.toBoolean, "DMA rx request high after read FIFO drained")
 
       dut.io.pio.pins.read #= BigInt("01", 2)
       fillCommands(apb, regs, List(

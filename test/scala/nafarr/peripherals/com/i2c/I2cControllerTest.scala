@@ -129,6 +129,10 @@ class I2cControllerTest extends AnyFunSuite {
       dut.clockDomain.waitSampling(2)
       dut.clockDomain.waitFallingEdge()
 
+      /* DMA request lines: empty command FIFO accepts, empty response FIFO has nothing */
+      assert(dut.io.dmaRequest.tx.toBoolean, "DMA tx request low with empty command FIFO")
+      assert(!dut.io.dmaRequest.rx.toBoolean, "DMA rx request high with empty response FIFO")
+
       /* Check IP identification */
       assert(
         apb.read(BigInt(0)) == BigInt("00080004", 16),

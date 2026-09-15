@@ -55,11 +55,15 @@ class AesMaskedAcceleratorTest extends AnyFunSuite {
       apb.write(regs.masking, BigInt("FFFFFFFF", 16))
 
       dut.clockDomain.waitSampling(4)
+      assert(!dut.io.dmaRequest.tx.toBoolean, "DMA tx request high with full plaintext FIFO")
+      assert(!dut.io.dmaRequest.rx.toBoolean, "DMA rx request high before encryption")
 
       /* Start */
       apb.write(regs.control, BigInt("1", 16))
 
       dut.clockDomain.waitSampling(400)
+      assert(dut.io.dmaRequest.tx.toBoolean, "DMA tx request low with drained plaintext FIFO")
+      assert(dut.io.dmaRequest.rx.toBoolean, "DMA rx request low with ciphertext available")
 
       /* Write Key */
       for (_ <- 0 until 8) {

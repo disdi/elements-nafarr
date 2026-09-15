@@ -9,6 +9,7 @@ import spinal.lib._
 import spinal.lib.bus.misc.BusSlaveFactory
 import spinal.lib.misc.InterruptCtrl
 import nafarr.IpIdentification
+import nafarr.system.dma.DmaRequest
 import nafarr.library.ClockDivider
 
 object UartCtrl {
@@ -244,6 +245,10 @@ object UartCtrl {
       )
       busCtrl.read(fifoOccupancy, address = regs.fifoStatus, bitOffset = 24)
     }
+
+    val dmaRequest = DmaRequest()
+    dmaRequest.tx := tx.streamUnbuffered.ready
+    dmaRequest.rx := rx.stream.valid
 
     val config = new Area {
       val cfg = Reg(ctrl.config)
